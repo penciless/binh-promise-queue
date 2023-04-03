@@ -1,0 +1,38 @@
+{
+  "name": "binh-promise-queue",
+  "description": "Run multiple promises in order of queue",
+  "version": "1.0.0",
+  "author": "Nguyen Duc Binh <binh.ng1195@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/penciless/binh-promise-queue.git"
+  },
+  "homepage": "https://github.com/penciless/binh-promise-queue#readme",
+  "bugs": {
+    "url": "https://github.com/penciless/binh-promise-queue/issues"
+  },
+  "keywords": [
+    "promise",
+    "queue",
+    "javascript",
+    "nodejs"
+  ],
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "jasmine": "^4.6.0",
+    "jasmine-ts-console-reporter": "^3.1.1",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0"
+  },
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test2": "jasmine --reporter=jasmine-ts-console-reporter",
+    "test": "mocha test/**/*.js",
+    "test-progress": "mocha test/**/*.js --reporter progress",
+    "coverage": "nyc --reporter=lcov npm run test"
+  }
+}
