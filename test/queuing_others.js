@@ -13,7 +13,7 @@ describe('PromiseQueue - Other ways to add items (functions returning promise) t
     const ERROR_EXPECTING_REJECTED_PROMISE = new Error('Expect to get rejected promise, but get a fulfilled one');
 
     const DIRECTORY_PATH = path.join(__dirname, 'test-others');
-    const { add, callback, exception, promise, call, interface, catchable, throwable, resolve, reject } = new PromiseQueue();
+    const { add, callback, exception, promise, call } = new PromiseQueue();
 
     var consoleLogOrigin = console.log();
 
@@ -24,7 +24,7 @@ describe('PromiseQueue - Other ways to add items (functions returning promise) t
 
     after(function(done) {
         console.log = consoleLogOrigin;
-        add(fsp, 'rm', DIRECTORY_PATH, { force: true, recursive: true }).then(done).catch(done);
+        fsp.rm(DIRECTORY_PATH, { force: true, recursive: true }).then(function() { done(); }).catch(done);
     });
 
     it('should handle rejected item added using queue.promise() with input as standard promise callback', function(done) {
@@ -236,11 +236,11 @@ describe('PromiseQueue - Other ways to add items (functions returning promise) t
         .catch(done); // catch error throwed from expect()
     });
 
-    it('should ALWAYS handle resolved with queue.callback(), and rejected with queue.exception()', function(done) {
+    it('should ALWAYS handle resolved (.then) with queue.callback(), and rejected (.catch) with queue.exception()', function(done) {
         function sampleFunction(success, doneCallback, errorCallback) {
             setTimeout(function() {
                 if (success) doneCallback(success);
-                else errorCallback(success)
+                else errorCallback(success);
             });
         }
 

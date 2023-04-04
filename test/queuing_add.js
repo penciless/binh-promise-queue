@@ -10,15 +10,21 @@ var { PromiseQueue } = require('../lib/promise-queue');
 
 describe('PromiseQueue - Add items (functions returning promise) to queue', function() {
 
+    const ERROR_EXPECTING_REJECTED_PROMISE = new Error('Expect to get rejected promise, but get a fulfilled one');
+
     const DIRECTORY_PATH = path.join(__dirname, 'test-add');
-    const { add, callback, exception, promise, call, interface, catchable, throwable, resolve, reject } = new PromiseQueue();
+    const { add } = new PromiseQueue();
+
+    var consoleLogOrigin = console.log();
 
     before(function(done) {
+        console.log = function(){};
         fsp.mkdir(DIRECTORY_PATH, { recursive: true }).then(function() { done(); }).catch(done);
     });
 
     after(function(done) {
-        add(fsp, 'rm', DIRECTORY_PATH, { force: true, recursive: true }).then(done).catch(done);
+        console.log = consoleLogOrigin;
+        fsp.rm(DIRECTORY_PATH, { force: true, recursive: true }).then(function() { done(); }).catch(done);
     });
 
     it('should handle when adding to queue an item using string name of function', function(done) {
@@ -61,7 +67,7 @@ describe('PromiseQueue - Add items (functions returning promise) to queue', func
             });
         })
         .then(function(result) {
-            done(new Error('Expect to get rejected promise, but get a fulfilled one'));
+            done(ERROR_EXPECTING_REJECTED_PROMISE);
         })
         .catch(function(error) {
             expect(error).to.be.an.instanceof(Error);
@@ -72,7 +78,7 @@ describe('PromiseQueue - Add items (functions returning promise) to queue', func
     it('should be error (rejected promise) when adding to queue: non-existing function, existing source object', function(done) {
         add(fsp, 'not_existing_function_name', 'random_arg1', 'random_arg2')
             .then(function() {
-                done(new Error('Expect to get rejected promise, but get a fulfilled one'));
+                done(ERROR_EXPECTING_REJECTED_PROMISE);
             })
             .catch(function(error) {
                 expect(error).to.be.an.instanceof(Error);
@@ -83,7 +89,7 @@ describe('PromiseQueue - Add items (functions returning promise) to queue', func
     it('should be error (rejected promise) when adding to queue: non-existing function, undefined source object', function(done) {
         add(undefined, 'not_existing_function_name', 'random_arg1', 'random_arg2')
             .then(function() {
-                done(new Error('Expect to get rejected promise, but get a fulfilled one'));
+                done(ERROR_EXPECTING_REJECTED_PROMISE);
             })
             .catch(function(error) {
                 expect(error).to.be.an.instanceof(Error);
@@ -94,19 +100,12 @@ describe('PromiseQueue - Add items (functions returning promise) to queue', func
     it('should be error (rejected promise) when adding to queue: undefined function, any source object', function(done) {
         add({}, undefined, 'random_arg1', 'random_arg2')
             .then(function() {
-                done(new Error('Expect to get rejected promise, but get a fulfilled one'));
+                done(ERROR_EXPECTING_REJECTED_PROMISE);
             })
             .catch(function(error) {
                 expect(error).to.be.an.instanceof(Error);
                 done();
             });
     });
-
-    // it('should return different queues when initialized with name as special value: undefined', function() {
-    //     var queue1 = new PromiseQueue(undefined);
-    //     var queue2 = new PromiseQueue(undefined);
-
-    //     expect(queue1).to.not.equal(queue2);
-    // });
 
 });
