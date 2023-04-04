@@ -10,7 +10,7 @@ var { PromiseQueue } = require('../lib/promise-queue');
 
 describe('PromiseQueue - Add items (functions returning promise) to queue', function() {
 
-    const ERROR_EXPECTING_REJECTED_PROMISE = new Error('Expect to get rejected promise, but get a fulfilled one');
+    const ERROR_EXPECTING_REJECTED_PROMISE = new Error('Expect to get a rejected promise, but got a fulfilled one');
 
     const DIRECTORY_PATH = path.join(__dirname, 'test-add');
     const { add } = new PromiseQueue();
