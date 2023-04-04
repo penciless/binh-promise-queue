@@ -10,7 +10,7 @@ var { PromiseQueue } = require('../lib/promise-queue');
 
 describe('PromiseQueue - Add items (functions returning promise) to queue', function() {
 
-    const DIRECTORY_PATH = path.join(__dirname, 'test');
+    const DIRECTORY_PATH = path.join(__dirname, 'test-add');
     const { add, callback, exception, promise, call, interface, catchable, throwable, resolve, reject } = new PromiseQueue();
 
     before(function(done) {
@@ -24,7 +24,7 @@ describe('PromiseQueue - Add items (functions returning promise) to queue', func
     it('should handle when adding to queue an item using string name of function', function(done) {
         add(fsp, 'writeFile', path.join(DIRECTORY_PATH, 'file1'), JSON.stringify({ sample: 123 }), { encoding: 'utf8', flag: 'w' })
             .then(function(result) {
-                expect(result).to.be.an('undefined');
+                expect(result).to.be.undefined;
                 done();
             })
             .catch(done);
@@ -54,9 +54,9 @@ describe('PromiseQueue - Add items (functions returning promise) to queue', func
 
     it('should be error (rejected promise) when adding to queue an isolated function requiring source object (but missing)', function(done) {
         add(null, function() {
-            var error_value = this.undefined_property;
+            var undefined_value = this.undefined_property;
             return new Promise(function (resolve, reject) {
-                var value = error_value.toString();
+                var value = undefined_value.toString(); // intended causing exception (throw error)
                 resolve(value);
             });
         })
