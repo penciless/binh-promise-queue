@@ -48,5 +48,5 @@ describe('PromiseQueue - Verify ordering-related behaviors', function() {
             }
         });
     });
-    
+
 });
