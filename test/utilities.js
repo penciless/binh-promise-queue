@@ -18,20 +18,7 @@ describe('PromiseQueue - Utilities that configure queue behaviors', function() {
     const ERROR_EXPECTING_REJECTED_PROMISE = new Error('Expect to get a rejected promise, but got a fulfilled one');
     const ERROR_EXPECTING_RESOLVED_PROMISE = new Error('Expect to get a fulfilled promise, but got a rejected one')
 
-    // const DIRECTORY_PATH = path.join(__dirname, 'test-interface');
-    const { add, callback, exception, promise, call, interface, catchable, throwable, resolve, reject, timeout } = new PromiseQueue();
-
-    var consoleLogOrigin = console.log();
-
-    before(function() {
-        console.log = function(){};
-        // fsp.mkdir(DIRECTORY_PATH, { recursive: true }).then(function() { done(); }).catch(done);
-    });
-
-    after(function() {
-        console.log = consoleLogOrigin;
-        // fsp.rm(DIRECTORY_PATH, { force: true, recursive: true }).then(function() { done(); }).catch(done);
-    });
+    const { add, callback, exception, promise, call, interface, catchable, throwable, resolve, reject, timeout, defaults } = new PromiseQueue();
 
     it('should cancel current task when timeout (in millisecond), and continue the next task', function(done) {
         var output = [];
@@ -158,6 +145,196 @@ describe('PromiseQueue - Utilities that configure queue behaviors', function() {
         
         expect(throwable()).to.equal(DEFAULT_THROWABLE_FLAG);
     });
-    
 
+    it('should reset all settings of .timeout(), .catchable(), .throwable() to defaults', function() {
+        expect(defaults()).to.eql({
+            timeout: DEFAULT_TIMEOUT_MS,
+            catchable: DEFAULT_CATCHABLE_FLAG,
+            throwable: DEFAULT_THROWABLE_FLAG
+        });
+    });
+
+    it('queue.throwable(true) - should throw exception (stop program) when not using any .catch()', function(done) {
+        throwable(true);
+        
+        var is_rejected = false;
+
+        var p1 = promise(function(resolve, reject) {
+            setTimeout(function() {
+                is_rejected = true;
+                reject(99);
+            });
+        });
+        
+        var p2 = p1.then(function() {
+            done(ERROR_EXPECTING_REJECTED_PROMISE);
+        });
+        
+        var p3 = p2.then(function() {
+            done(ERROR_EXPECTING_REJECTED_PROMISE);
+        });
+
+        var interval_id = setInterval(function() {
+            if (is_rejected) {
+                clearInterval(interval_id);
+
+                // Because uncaught exception is thrown, values are undefined
+                expect(p1.state).to.be.undefined;
+                expect(p1.value).to.be.undefined;
+
+                expect(p2.state).to.be.undefined;
+                expect(p2.value).to.be.undefined;
+
+                expect(p3.state).to.be.undefined;
+                expect(p3.value).to.be.undefined;
+                expect(p3.next).to.be.undefined; // last one
+
+                done();
+            }
+        });
+    });
+
+    it('queue.throwable(false) - should ignore exception (not stop program) without using .catch(), but all .then() are skipped', function(done) {
+        throwable(false);
+        
+        var is_rejected = false;
+
+        var p1 = promise(function(resolve, reject) {
+            setTimeout(function() {
+                is_rejected = true;
+                reject(new Error('Example error'));
+            });
+        });
+        
+        var p2 = p1.then(function() {
+            done(ERROR_EXPECTING_REJECTED_PROMISE);
+        });
+        
+        var p3 = p2.then(function() {
+            done(ERROR_EXPECTING_REJECTED_PROMISE);
+        });
+
+        var interval_id = setInterval(function() {
+            if (is_rejected) {
+                clearInterval(interval_id);
+
+                // Because uncaught exception is self-handled by queue feature, values are remained
+                expect(p1.state).to.equal('rejected');
+                expect(p1.value).to.be.instanceof(Error);
+
+                expect(p2.state).to.equal('rejected');
+                expect(p2.value).to.be.instanceof(Error);
+
+                expect(p3.state).to.equal('rejected');
+                expect(p3.value).to.be.instanceof(Error);
+                expect(p3.next).to.be.undefined; // last one
+
+                done();
+            }
+        });
+    });
+
+    it('queue.throwable(false) - should ignore exception (not stop program), but still able to use .catch() to handle exception', function(done) {
+        throwable(false);
+        
+        var is_rejected = false;
+
+        var p1 = promise(function(resolve, reject) {
+            setTimeout(function() {
+                is_rejected = true;
+                reject(new Error('Example error'));
+            });
+        });
+        
+        var p2 = p1.then(function() {
+            done(ERROR_EXPECTING_REJECTED_PROMISE);
+        });
+        
+        var p3 = p2.catch(function(error) {
+            expect(error).to.be.instanceof(Error);
+            return 123;
+        });
+        
+        var p4 = p3.then(function(result) {
+            expect(result).to.equal(123);
+            return result;
+        });
+
+        var interval_id = setInterval(function() {
+            if (is_rejected) {
+                clearInterval(interval_id);
+
+                expect(p1.state).to.equal('rejected');
+                expect(p1.value).to.be.instanceof(Error);
+
+                expect(p2.state).to.equal('rejected');
+                expect(p2.value).to.be.instanceof(Error);
+
+                expect(p3.state).to.equal('fulfilled');
+                expect(p3.value).to.equal(123);
+
+                expect(p4.state).to.equal('fulfilled');
+                expect(p4.value).to.equal(123);
+                expect(p4.next).to.be.undefined; // last one
+
+                done();
+            }
+        });
+    });
+
+    it('should interfere and resolve inside a callback-based function using queue.resolve(result)', function(done) {
+        function sampleFunction(callback) {
+            setTimeout(function() {
+                callback(99);
+            });
+        }
+
+        var queue = new PromiseQueue();
+
+        queue.add(null, sampleFunction, function(result) {
+            queue.resolve(result);
+        })
+        .then(function(result) {
+            expect(result).to.equal(99);
+            done();
+        })
+        .catch(done);
+    });
+
+    it('should interfere and reject inside a callback-based function using queue.reject(error)', function(done) {
+        function sampleFunction(callback) {
+            setTimeout(function() {
+                callback(new Error('Example error'));
+            });
+        }
+
+        var queue = new PromiseQueue();
+
+        queue.add(null, sampleFunction, function(error) {
+            queue.reject(error);
+        })
+        .then(function() {
+            done(ERROR_EXPECTING_REJECTED_PROMISE);
+        })
+        .catch(function(error) {
+            expect(error).to.be.instanceof(Error);
+            done();
+        })
+        .catch(done);
+    });
+
+    it('should be safe when unpurposely triggering queue.resolve, queue.reject, queue.callback, queue.exception', function() {
+        var queue = new PromiseQueue();
+
+        queue.resolve();
+        queue.reject();
+        queue.callback()();
+        queue.exception()();
+
+        queue.resolve();
+        queue.reject();
+        queue.callback()();
+        queue.exception()();
+    });
+    
 });

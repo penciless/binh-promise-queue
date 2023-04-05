@@ -15,15 +15,11 @@ describe('PromiseQueue - Create interfaces adding items (functions returning pro
     const DIRECTORY_PATH = path.join(__dirname, 'test-interface');
     const { callback, interface, resolve, reject } = new PromiseQueue();
 
-    var consoleLogOrigin = console.log();
-
     before(function(done) {
-        console.log = function(){};
         fsp.mkdir(DIRECTORY_PATH, { recursive: true }).then(function() { done(); }).catch(done);
     });
 
     after(function(done) {
-        console.log = consoleLogOrigin;
         fsp.rm(DIRECTORY_PATH, { force: true, recursive: true }).then(function() { done(); }).catch(done);
     });
 
@@ -91,7 +87,7 @@ describe('PromiseQueue - Create interfaces adding items (functions returning pro
             .catch(done);
         
         fsInterface.readFile(path.join(DIRECTORY_PATH, 'file2'), { encoding: 'utf8', flag: 'r' }, function(error, data) {
-            if (error) reject(error);
+            if (error) return reject(error);
             resolve(data);
         })
         .then(function(result) {
@@ -101,7 +97,7 @@ describe('PromiseQueue - Create interfaces adding items (functions returning pro
 
         
         fsInterface.readFile(path.join(DIRECTORY_PATH, 'not-existing-file'), { encoding: 'utf8', flag: 'r' }, function(error, data) {
-            if (error) reject(error);
+            if (error) return reject(error);
             resolve(data);
         })
         .then(function() {

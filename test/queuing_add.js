@@ -15,15 +15,11 @@ describe('PromiseQueue - Add items (functions returning promise) to queue', func
     const DIRECTORY_PATH = path.join(__dirname, 'test-add');
     const { add } = new PromiseQueue();
 
-    var consoleLogOrigin = console.log();
-
     before(function(done) {
-        console.log = function(){};
         fsp.mkdir(DIRECTORY_PATH, { recursive: true }).then(function() { done(); }).catch(done);
     });
 
     after(function(done) {
-        console.log = consoleLogOrigin;
         fsp.rm(DIRECTORY_PATH, { force: true, recursive: true }).then(function() { done(); }).catch(done);
     });
 
