@@ -19,11 +19,11 @@
     "nodejs"
   ],
   "devDependencies": {
+    "browserify": "^17.0.0",
     "chai": "^4.3.7",
-    "jasmine": "^4.6.0",
-    "jasmine-ts-console-reporter": "^3.1.1",
     "mocha": "^10.2.0",
-    "nyc": "^15.1.0"
+    "nyc": "^15.1.0",
+    "tinyify": "^4.0.0"
   },
   "engines": {
     "node": ">= 0.10.0"
@@ -31,8 +31,9 @@
   "main": "index.js",
   "scripts": {
     "test2": "jasmine --reporter=jasmine-ts-console-reporter",
-    "test": "mocha test/**/*.js",
+    "test": "mocha test/**/*.js --bail",
     "test-progress": "mocha test/**/*.js --reporter progress",
-    "coverage": "nyc --reporter=lcov npm run test"
+    "coverage": "nyc --reporter=lcov npm run test",
+    "build-browser": "browserify lib/promise-queue.js -o browser/binh-promise-queue.js -p [ tinyify --no-flat ]"
   }
 }
