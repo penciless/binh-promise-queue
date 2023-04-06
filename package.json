@@ -30,7 +30,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "test2": "jasmine --reporter=jasmine-ts-console-reporter",
+    "start": "npm run test && npm run build-browser",
     "test": "mocha test/**/*.js --bail",
     "test-progress": "mocha test/**/*.js --reporter progress",
     "coverage": "nyc --reporter=lcov npm run test",

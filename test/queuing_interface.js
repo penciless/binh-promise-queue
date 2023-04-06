@@ -95,7 +95,6 @@ describe('PromiseQueue - Create interfaces adding items (functions returning pro
         })
         .catch(done);
 
-        
         fsInterface.readFile(path.join(DIRECTORY_PATH, 'not-existing-file'), { encoding: 'utf8', flag: 'r' }, function(error, data) {
             if (error) return reject(error);
             resolve(data);
@@ -143,6 +142,28 @@ describe('PromiseQueue - Create interfaces adding items (functions returning pro
     it('should create an empty interface when getting a cached interface with unknown name (no existing cache)', function() {
         var theInterface = interface('no-existing-cache-name');
         expect(theInterface).to.eql({});
+    });
+
+    it('.interface(object).objectFunction().args() - should add item with async parameters into queue', function(done) {
+        var required_value = null;
+        
+        var fspInterface = interface(fsp);
+
+        fspInterface.writeFile(path.join(DIRECTORY_PATH, 'fileAsync'), JSON.stringify({ sample: 333 }), { encoding: 'utf8', flag: 'w' })
+            .then(function(result) {
+                required_value = 'fileAsync';
+                expect(result).to.be.undefined;
+            })
+            .catch(done);
+        
+        fspInterface.readFile.args(function() {
+            return [path.join(DIRECTORY_PATH, required_value), { encoding: 'utf8', flag: 'r' }];
+        })
+        .then(function(result) {
+            expect(result).to.equal(JSON.stringify({ sample: 333 }));
+            done();
+        })
+        .catch(done);
     });
 
 });

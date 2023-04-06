@@ -384,5 +384,118 @@ describe('PromiseQueue - Utilities that configure queue behaviors', function() {
 
         done();
     });
+
+    it('queue.takeover() - should prioritize the last task, having just added to queue, to run first (move to front queue) after the running task', function(done) {
+        var queue = new PromiseQueue();
+
+        var { promise, takeover } = queue;
+
+        var chain = [];
+        
+        // Add task 01 to queue
+        promise(function(resolve) {
+            setTimeout(function() {
+                resolve('task 01');
+            });
+        })
+        .then(function(result) {
+            chain.push(result);
+            // Add task interception to queue
+            interception();
+            takeover();
+        })
+        .catch(done);
+
+        // Add task 02 to queue
+        promise(function(resolve) {
+            setTimeout(function() {
+                resolve('task 02');
+            });
+        })
+        .then(function(result) {
+            chain.push(result);
+        })
+        .catch(done);
+
+        // Declare task interception
+        function interception() {
+            promise(function(resolve) {
+                setTimeout(function() {
+                    resolve('task interception');
+                });
+            })
+            .then(function(result) {
+                chain.push(result);
+            })
+            .catch(done);
+        }
+
+        var interval_id = setInterval(function() {
+            if (chain.length >= 3) {
+                clearInterval(interval_id);
+                expect(chain[0]).to.equal('task 01');
+                expect(chain[1]).to.equal('task interception');
+                expect(chain[2]).to.equal('task 02');
+                done();
+            }
+        });
+    });
+
+    it('queue.takeover() - should only move task to front queue once, multiple calls of .takeover() not affecting multiple tasks in rear queue, until a new task is added', function(done) {
+        var queue = new PromiseQueue();
+
+        var { promise, takeover } = queue;
+
+        var chain = [];
+
+        function createTask(input) {
+            promise(function(resolve) {
+                setTimeout(function() {
+                    resolve(input);
+                });
+            })
+            .then(function(result) {
+                chain.push(result);
+            })
+            .catch(done);
+        }
+
+        // Add task 01 to queue
+        // queue: [01 running][]
+        createTask('task 01');
+
+        // Add task 02 to queue
+        // queue: [01 running][02]
+        createTask('task 02');
+
+        // Add task 03 to queue
+        // queue: [01 running][02, 03]
+        createTask('task 03');
+
+        // Move task 03 before task 02 (not before 01, because 01 is executed right after added to queue)
+        takeover(); // queue: [01 running][03, 02]
+        takeover(); // try to move more, but failed
+        takeover(); // try to move more, but failed
+
+        // Add task 04 to queue
+        // queue: [01 running][03, 02, 04]
+        createTask('task 04');
+
+        // Move task 04 before task 03 (since 03 is currently the most queue-front task)
+        takeover(); // queue: [01 running][04, 03, 02]
+        takeover(); // try to move more, but failed
+        takeover(); // try to move more, but failed
+
+        var interval_id = setInterval(function() {
+            if (chain.length >= 4) {
+                clearInterval(interval_id);
+                expect(chain[0]).to.equal('task 01');
+                expect(chain[1]).to.equal('task 04');
+                expect(chain[2]).to.equal('task 03');
+                expect(chain[3]).to.equal('task 02');
+                done();
+            }
+        });
+    });
     
 });
