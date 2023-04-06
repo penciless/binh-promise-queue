@@ -23,12 +23,12 @@ describe('PromiseQueue - Utilities that configure queue behaviors', function() {
     it('should cancel current task when timeout (in millisecond), and continue the next task', function(done) {
         var output = [];
 
-        timeout(10);
+        timeout(1);
         
         promise(function(resolve) {
             setTimeout(function() {
                 resolve(true);
-            }, 20);
+            }, 10);
         })
         .then(function() {
             done(ERROR_EXPECTING_REJECTED_PROMISE);
@@ -162,7 +162,7 @@ describe('PromiseQueue - Utilities that configure queue behaviors', function() {
         var p1 = promise(function(resolve, reject) {
             setTimeout(function() {
                 is_rejected = true;
-                reject(99);
+                reject(new Error('Example error'));
             });
         });
         
@@ -178,15 +178,17 @@ describe('PromiseQueue - Utilities that configure queue behaviors', function() {
             if (is_rejected) {
                 clearInterval(interval_id);
 
-                // Because uncaught exception is thrown, values are undefined
-                expect(p1.state).to.be.undefined;
-                expect(p1.value).to.be.undefined;
+                expect(p1.state).to.equal('rejected');
+                expect(p1.value).to.be.instanceof(Error);
+                expect(p1.uncaugtht).to.be.true;
 
-                expect(p2.state).to.be.undefined;
-                expect(p2.value).to.be.undefined;
+                expect(p2.state).to.equal('rejected');
+                expect(p2.value).to.be.instanceof(Error);
+                expect(p2.uncaugtht).to.be.true;
 
-                expect(p3.state).to.be.undefined;
-                expect(p3.value).to.be.undefined;
+                expect(p3.state).to.equal('rejected');
+                expect(p3.value).to.be.instanceof(Error);
+                expect(p3.uncaugtht).to.be.true;
                 expect(p3.next).to.be.undefined; // last one
 
                 done();
@@ -218,15 +220,17 @@ describe('PromiseQueue - Utilities that configure queue behaviors', function() {
             if (is_rejected) {
                 clearInterval(interval_id);
 
-                // Because uncaught exception is self-handled by queue feature, values are remained
                 expect(p1.state).to.equal('rejected');
                 expect(p1.value).to.be.instanceof(Error);
+                expect(p1.uncaugtht).to.be.undefined;
 
                 expect(p2.state).to.equal('rejected');
                 expect(p2.value).to.be.instanceof(Error);
+                expect(p2.uncaugtht).to.be.undefined;
 
                 expect(p3.state).to.equal('rejected');
                 expect(p3.value).to.be.instanceof(Error);
+                expect(p3.uncaugtht).to.be.undefined;
                 expect(p3.next).to.be.undefined; // last one
 
                 done();
@@ -335,6 +339,50 @@ describe('PromiseQueue - Utilities that configure queue behaviors', function() {
         queue.reject();
         queue.callback()();
         queue.exception()();
+    });
+
+    it('queue.status() - should returns final parameters of the current running queue', function(done) {
+        var queue = new PromiseQueue();
+
+        queue.catchable(!DEFAULT_CATCHABLE_FLAG);
+        queue.throwable(!DEFAULT_THROWABLE_FLAG);
+        queue.timeout(DEFAULT_TIMEOUT_MS + 2000);
+
+        var status = queue.status();
+
+        expect(status.catchable).to.equal(!DEFAULT_CATCHABLE_FLAG);
+        expect(status.throwable).to.equal(!DEFAULT_THROWABLE_FLAG);
+        expect(status.timeout).to.equal(DEFAULT_TIMEOUT_MS + 2000);
+        expect(status.busy).to.be.false;
+        expect(status.tasks).to.equal(0);
+
+        queue.defaults();
+        
+        // Run immediately after added => queue size: 0
+        queue.promise(function(resolve) {
+            setTimeout(function() {
+                resolve(99);
+            });
+        })
+        .catch(done);
+
+        // Waiting above task after added => queue size: 1
+        queue.promise(function(resolve) {
+            setTimeout(function() {
+                resolve(99);
+            });
+        })
+        .catch(done);
+
+        var status = queue.status();
+
+        expect(status.catchable).to.equal(DEFAULT_CATCHABLE_FLAG);
+        expect(status.throwable).to.equal(DEFAULT_THROWABLE_FLAG);
+        expect(status.timeout).to.equal(DEFAULT_TIMEOUT_MS);
+        expect(status.busy).to.be.true;
+        expect(status.tasks).to.equal(1);
+
+        done();
     });
     
 });
