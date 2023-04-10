@@ -1,7 +1,7 @@
 {
   "name": "binh-promise-queue",
   "description": "Run multiple promises in order of queue",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "author": "Nguyen Duc Binh <binh.ng1195@gmail.com>",
   "license": "MIT",
   "repository": {
