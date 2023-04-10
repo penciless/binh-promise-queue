@@ -44,7 +44,34 @@ describe('PromiseQueue - Create interfaces adding items (functions returning pro
         .catch(function(error) {
             expect(error).to.be.false;
             done();
-        });
+        })
+        .catch(done);
+    });
+
+    it('should create interface for an isolated function with different thisArg', function(done) {
+        function samplePromiseFunc(success) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                if (success) resolve(_this.good);
+                else reject(_this.bad);
+            });
+        }
+
+        var queueInterfaceFunc = interface(samplePromiseFunc, { good: 111, bad: 222 });
+
+        queueInterfaceFunc(true).then(function(result) {
+            expect(result).to.equal(111);
+        })
+        .catch(done);
+
+        queueInterfaceFunc(false).then(function(result) {
+            done(ERROR_EXPECTING_REJECTED_PROMISE);
+        })
+        .catch(function(error) {
+            expect(error).to.equal(222);
+            done();
+        })
+        .catch(done);
     });
 
     it('should create interface for a class instance (promise-based)', function(done) {
@@ -116,19 +143,19 @@ describe('PromiseQueue - Create interfaces adding items (functions returning pro
     });
 
     it('should create the same interface for the same class instance (with the same name of interface)', function() {
-        var fsInterface1 = interface('fs', fs);
+        var fsInterface1 = interface(fs, 'fs');
         var fsInterface2 = interface('fs');
         expect(fsInterface1).to.equal(fsInterface2);
     });
 
     it('should override a new interface for the same class instance (with the same name of interface)', function() {
-        var fsInterface1 = interface('fs', fs);
-        var fsInterface2 = interface('fs', fs);
+        var fsInterface1 = interface(fs, 'fs');
+        var fsInterface2 = interface(fs, 'fs');
         expect(fsInterface1).to.not.equal(fsInterface2);
     });
 
     it('should get the same cached interface from a different queue (by the name assigned for that interface)', function() {
-        var fsInterface1 = interface('fs', fs);
+        var fsInterface1 = interface(fs, 'fs');
         var new_queue = new PromiseQueue();
         var fsInterface2 = new_queue.interface('fs');
         expect(fsInterface1).to.equal(fsInterface2);
