@@ -497,5 +497,60 @@ describe('PromiseQueue - Utilities that configure queue behaviors', function() {
             }
         });
     });
+
+    it('promise.now() - should prioritize the task to run first (move to front queue), right after the running task', function(done) {
+        var queue = new PromiseQueue();
+
+        var { promise } = queue;
+
+        var chain = [];
+
+        // Declare task interception
+        function interception() {
+            return promise(function(resolve) {
+                setTimeout(function() {
+                    resolve('task interception');
+                });
+            })
+            .then(function(result) {
+                chain.push(result);
+            })
+            .catch(done);
+        }
+        
+        // Add task 01 to queue
+        promise(function(resolve) {
+            setTimeout(function() {
+                resolve('task 01');
+            });
+        })
+        .then(function(result) {
+            chain.push(result);
+            // Add task interception to queue
+            interception().now();
+        })
+        .catch(done);
+
+        // Add task 02 to queue
+        promise(function(resolve) {
+            setTimeout(function() {
+                resolve('task 02');
+            });
+        })
+        .then(function(result) {
+            chain.push(result);
+        })
+        .catch(done);
+
+        var interval_id = setInterval(function() {
+            if (chain.length >= 3) {
+                clearInterval(interval_id);
+                expect(chain[0]).to.equal('task 01');
+                expect(chain[1]).to.equal('task interception');
+                expect(chain[2]).to.equal('task 02');
+                done();
+            }
+        });
+    });
     
 });
