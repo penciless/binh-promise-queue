@@ -166,4 +166,27 @@ describe('PromiseQueue - Create interfaces adding items (functions returning pro
         .catch(done);
     });
 
+    it('.interface(function).args() - should add item with async parameters into queue', function(done) {
+        var required_value = null;
+        
+        var iwriteFile = interface(fsp.writeFile);
+        var ireadFile = interface(fsp.readFile);
+
+        iwriteFile(path.join(DIRECTORY_PATH, 'fileAsync'), JSON.stringify({ sample: 333 }), { encoding: 'utf8', flag: 'w' })
+            .then(function(result) {
+                required_value = 'fileAsync';
+                expect(result).to.be.undefined;
+            })
+            .catch(done);
+        
+        ireadFile.args(function() {
+            return [path.join(DIRECTORY_PATH, required_value), { encoding: 'utf8', flag: 'r' }];
+        })
+        .then(function(result) {
+            expect(result).to.equal(JSON.stringify({ sample: 333 }));
+            done();
+        })
+        .catch(done);
+    });
+
 });
