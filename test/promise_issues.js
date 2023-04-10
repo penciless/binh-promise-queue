@@ -153,7 +153,7 @@ describe('PromiseQueue - Verify promise behaviours after customized', function()
         });
     });
 
-    it('Promise(reject).then(return Promise.resolve) - final promise should still trigger .then afterward', function(done) {
+    it('Promise(reject).catch(return Promise.resolve) - final promise should still trigger .then afterward', function(done) {
         queue.throwable(false);
 
         var complete = false;
