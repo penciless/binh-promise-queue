@@ -16,7 +16,7 @@ var {
 describe('PromiseQueue - Utilities that configure queue behaviors', function() {
 
     const ERROR_EXPECTING_REJECTED_PROMISE = new Error('Expect to get a rejected promise, but got a fulfilled one');
-    const ERROR_EXPECTING_RESOLVED_PROMISE = new Error('Expect to get a fulfilled promise, but got a rejected one')
+    const ERROR_EXPECTING_RESOLVED_PROMISE = new Error('Expect to get a fulfilled promise, but got a rejected one');
 
     const { add, callback, exception, promise, call, interface, catchable, throwable, resolve, reject, timeout, defaults } = new PromiseQueue();
 
