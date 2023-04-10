@@ -527,7 +527,8 @@ describe('PromiseQueue - Utilities that configure queue behaviors', function() {
         .then(function(result) {
             chain.push(result);
             // Add task interception to queue
-            interception().now();
+            var promize = interception().now();
+            expect(promize).to.be.instanceof(Promise);
         })
         .catch(done);
 
