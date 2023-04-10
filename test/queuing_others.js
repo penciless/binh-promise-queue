@@ -13,7 +13,8 @@ describe('PromiseQueue - Other ways to add items (functions returning promise) t
     const ERROR_EXPECTING_REJECTED_PROMISE = new Error('Expect to get a rejected promise, but got a fulfilled one');
 
     const DIRECTORY_PATH = path.join(__dirname, 'test-others');
-    const { add, callback, exception, promise, call } = new PromiseQueue();
+    const queue = new PromiseQueue();
+    const { add, callback, exception, promise, call } = queue;
 
     before(function(done) {
         fsp.mkdir(DIRECTORY_PATH, { recursive: true }).then(function() { done(); }).catch(done);
