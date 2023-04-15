@@ -154,11 +154,11 @@ describe('PromiseQueue - Create interfaces adding items (functions returning pro
         expect(fsInterface1).to.not.equal(fsInterface2);
     });
 
-    it('should get the same cached interface from a different queue (by the name assigned for that interface)', function() {
+    it('should get a different cached interface from a different queue (with the same name of interface)', function() {
         var fsInterface1 = interface(fs, 'fs');
         var new_queue = new PromiseQueue();
         var fsInterface2 = new_queue.interface('fs');
-        expect(fsInterface1).to.equal(fsInterface2);
+        expect(fsInterface1).to.not.equal(fsInterface2);
     });
 
     it('should create an empty interface when initialized with undefined class instance or function (no input)', function() {
